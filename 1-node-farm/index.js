@@ -1,6 +1,8 @@
-const fs = require("fs");
-const http = require("http");
-const url = require("url");
+const fs = require('fs');
+const http = require('http');
+const url = require('url');
+const slugify = require('slugify'); //to replace queries with slugs(last part of url ?id=0 => avocados)
+const replaceTemplate = require('./modules.js/replaceTemplate');
 
 /////////////////////////////////////////////////////////////////////
 // FILES
@@ -44,6 +46,7 @@ fs.readFile("./txt/start.txt", "utf-8", (err, data1) => {
 /////////////////////////////////////////////////////////////////////
 // SERVER
 
+/*
 const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, "utf-8");
 const productData = JSON.parse(data);
 
@@ -83,3 +86,75 @@ const server = http.createServer((req, res) => {
 server.listen(8000, "127.0.0.1", () => {
   console.log("Listening to requests on port 8000");
 });
+*/
+
+/////////////////////////////////////////////////////////////////////
+// TEMPLATE
+
+const data = fs.readFileSync(`${__dirname}/dev-data/data.json`, 'utf-8');
+const productData = JSON.parse(data);
+
+const tempOverview = fs.readFileSync(
+  `${__dirname}/templates/template-overview.html`,
+  'utf-8'
+);
+
+const tempPorduct = fs.readFileSync(
+  `${__dirname}/templates/template-product.html`,
+  'utf-8'
+);
+
+const tempCard = fs.readFileSync(
+  `${__dirname}/templates/template-card.html`,
+  'utf-8'
+);
+
+const slugs = productData.map((el) => slugify(el.productName, { lower: true }));
+console.log(slugs);
+
+const server = http.createServer((req, res) => {
+  const { pathname, query } = url.parse(req.url, true);
+
+  if (pathname === '/' || pathname === '/overview') {
+    res.writeHead(200, { 'content-type': 'text/html' });
+
+    const cardsHTML = productData
+      .map((el) => replaceTemplate(tempCard, el))
+      .join('\n');
+
+    const output = tempOverview.replace(/{%PRODUCT_CARD%}/g, cardsHTML);
+
+    res.end(output);
+  } else if (pathname === '/product') {
+    res.writeHead(200, { 'content-type': 'text/html' });
+    const id = query.id;
+    const product = productData.find((el) => el.id == id);
+    const output = replaceTemplate(tempPorduct, product);
+    res.end(output);
+  } else if (pathname === '/api') {
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(data);
+  } else {
+    res.writeHead(404, { 'content-type': 'text/html' });
+    res.end('<h1>PAGE NOT FOUND !!</h1>');
+  }
+});
+
+server.listen(8000, 'localhost', () => {
+  console.log('Listening to requests on port 8000');
+});
+
+///////////////////////////////////////////////////////////////////
+// NPM
+
+//npm install
+//npm install packageName@1.3.4 <- version 1.3.4
+//npm outdated
+//npm update
+//npt uninstall
+// version: major.minor.patch
+// patch -> bugs ,, minor -> adding feature to current version (everything in the major version will still work)
+// major -> big changes that my affect app like changing main functionalities names
+// using ^ means we accepts & update to latest patch and minor version changes "^1.3.4"
+// using ~ means only accepts& update to patch version changes "~1.3.4"
+// using * if for all versions
