@@ -8,6 +8,7 @@ exports.checkId = (req, res, next, val) => {
   const id = Number(val);
   const index = tours.findIndex((tour) => tour.id === id);
   if (index === -1) {
+    //404 NOT FOUND
     return res.status(404).json({
       status: 'fail',
       message: 'Invalid ID',
@@ -16,8 +17,20 @@ exports.checkId = (req, res, next, val) => {
   next();
 };
 
+exports.checkBody = (req, res, next) => {
+  if (!req.body.name || !req.body.price) {
+    //400 BAD REQUEST
+    return res.status(400).json({
+      status: 'fail',
+      message: 'Missing name or price',
+    });
+  }
+  next();
+};
+
 exports.getAllTours = (req, res) => {
   console.log(req.requestTime);
+  //200 OK
   res.status(200).json({
     status: 'success',
     requestedAt: req.requestTime,
@@ -29,7 +42,7 @@ exports.getAllTours = (req, res) => {
 exports.getTour = (req, res) => {
   const id = Number(req.params.id);
   const tour = tours.find((tour) => tour.id === id);
-
+  //200 OK
   res.status(200).json({
     status: 'success',
     data: {
@@ -47,6 +60,7 @@ exports.createTour = (req, res) => {
     `${__dirname}/../dev-data/data/tours-simple.json`,
     JSON.stringify(tours),
     (err) => {
+      //201 CREATED
       res.status(201).json({
         status: 'success',
         data: {
@@ -66,6 +80,7 @@ exports.updateTour = (req, res) => {
     `${__dirname}/../dev-data/data/tours-simple.json`,
     JSON.stringify(tours),
     (err) => {
+      //200 OK
       res.status(200).json({
         status: 'success',
         data: {
@@ -83,6 +98,7 @@ exports.deleteTour = (req, res) => {
     `${__dirname}/../dev-data/data/tours-simple.json`,
     JSON.stringify(tours),
     (err) => {
+      //204 NO CONTENT
       res.status(204).json({
         status: 'success',
         data: null,
