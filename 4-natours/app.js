@@ -19,7 +19,7 @@ app.use((req, res, next) => {
   next();
 });
 
-//Mounting Routers to a specific path
+// Mounting Routers to a specific path
 app.use('/api/v1/tours', tourRouter);
 app.use('/api/v1/users', userRouter);
 
