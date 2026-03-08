@@ -25,6 +25,8 @@ const sendErrorProd = (err, res) => {
   }
   // Programming or other unknown error
   else {
+    console.log('ERROR ', err);
+
     res.status(500).json({
       status: 'error',
       message: 'Something went wrong!',
@@ -65,6 +67,12 @@ module.exports = (err, req, res, next) => {
     }
     if (err.name === DB_ERROR_TYPES.VALIDATION_ERROR) {
       err = handleValidationErrorDB(err);
+    }
+    if (err.name === 'JsonWebTokenError') {
+      err = new AppError('Invalid Token. Please log in again!', 401);
+    }
+    if (err.name === 'TokenExpiredError') {
+      err = new AppError('Your token has expired! Please log in again.', 401);
     }
     sendErrorProd(err, res);
   }
