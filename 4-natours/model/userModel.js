@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -39,11 +40,9 @@ const userSchema = new mongoose.Schema({
       message: 'Passwords are not the same',
     },
   },
-  passwordChangedAt: {
-    type: Date,
-    default: Date.now(),
-    select: false,
-  },
+  passwordChangedAt: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 });
 
 // Instance method to check if the password is correct
@@ -68,14 +67,30 @@ userSchema.methods.passwordChangedAfter = function (JWTTimestamp) {
   return false;
 };
 
+userSchema.methods.createResetPasswordToken = function () {
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  this.passwordResetToken = crypto
+    .createHash('sha256')
+    .update(resetToken)
+    .digest('hex');
+
+  this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
+
+  console.log({ resetToken }, this.passwordResetToken);
+  return resetToken;
+};
+
+userSchema.pre('save', function () {
+  if (!this.isModified('password') || this.isNew) return;
+  this.passwordChangedAt = Date.now() - 1000;
+});
+
 userSchema.pre('save', async function () {
   // Only run this function if password was actually modified
   if (!this.isModified('password')) return;
 
   // Hash the password with cost of 12
   this.password = await bcrypt.hash(this.password, 12);
-
-  this.passwordChangedAt = Date.now() - 1000;
 
   // Delete passwordConfirm field
   this.passwordConfirm = undefined;
