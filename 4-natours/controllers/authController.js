@@ -11,18 +11,21 @@ const signToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
-exports.signup = catchAsync(async (req, res, next) => {
-  const { name, email, password, passwordConfirm } = req.body;
-  const newUser = await User.create({ name, email, password, passwordConfirm });
-  const token = signToken(newUser._id);
-
-  res.status(201).json({
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  res.status(statusCode).json({
     status: 'success',
     token,
     data: {
-      user: newUser,
+      user,
     },
   });
+};
+
+exports.signup = catchAsync(async (req, res, next) => {
+  const { name, email, password, passwordConfirm } = req.body;
+  const newUser = await User.create({ name, email, password, passwordConfirm });
+  createSendToken(newUser, 201, res);
 });
 
 exports.login = catchAsync(async (req, res, next) => {
@@ -37,13 +40,7 @@ exports.login = catchAsync(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password))) {
     throw new AppError('Incorrect email or password', 401);
   }
-
-  const token = signToken(user._id);
-
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
@@ -156,10 +153,22 @@ exports.resetPassword = catchAsync(async (req, res, next) => {
 
   console.log(user);
 
-  // 3) Log the user in, send JWT
-  const token = signToken(user._id);
-  res.status(200).json({
-    status: 'success',
-    token,
-  });
+  createSendToken(user, 200, res);
+});
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  const user = await User.findById(req.user.id).select('+password');
+  const { password, newPassword, newPasswordConfirmation } = req.body;
+
+  const isCorrect = await user.correctPassword(password, user.password);
+
+  if (!isCorrect) {
+    return next(new AppError('Your current password is wrong.', 401));
+  }
+
+  user.password = newPassword;
+  user.passwordConfirm = newPasswordConfirmation;
+  await user.save();
+
+  createSendToken(user, 200, res);
 });
