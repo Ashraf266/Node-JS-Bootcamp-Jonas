@@ -43,6 +43,11 @@ const userSchema = new mongoose.Schema({
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 // Instance method to check if the password is correct
@@ -79,6 +84,11 @@ userSchema.methods.createResetPasswordToken = function () {
   console.log({ resetToken }, this.passwordResetToken);
   return resetToken;
 };
+
+userSchema.pre(/^find/, function () {
+  // this points to current query
+  this.find({ active: { $ne: false } });
+});
 
 userSchema.pre('save', function () {
   if (!this.isModified('password') || this.isNew) return;
