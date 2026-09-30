@@ -1,5 +1,11 @@
 const express = require('express');
 const morgan = require('morgan');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('@exortek/express-mongo-sanitize');
+const { xss } = require('express-xss-sanitizer');
+const hpp = require('hpp');
+
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 const tourRouter = require('./routes/tourRoutes');
@@ -9,13 +15,56 @@ const app = express();
 
 app.set('query parser', 'extended');
 
-// Middleware
+// Global Middleware
+
+// Set Secuirty HTTP headers
+app.use(helmet());
+
+// Development Logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-app.use(express.json());
+
+// Limit to 100 request per hour
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many requests from this IP, please try again in an hour!',
+});
+app.use('/api', limiter);
+
+// body parser
+app.use(
+  express.json({
+    limit: '10kb',
+  }),
+);
+
+// Data sanitization against nosql query injection
+app.use(mongoSanitize());
+
+// Data sanitization against XSS
+app.use(xss());
+
+// Prevent parameter pollution
+// don't do it manually automate it from schema
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  }),
+);
+
+// Serving static files
 app.use(express.static(`${__dirname}/public`));
 
+// Sest middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   // console.log(req.headers);
