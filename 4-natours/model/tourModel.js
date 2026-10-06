@@ -125,6 +125,13 @@ tourSchema.virtual('durationWeeks').get(function () {
   return Number((this.duration / 7).toFixed(2));
 });
 
+//virtual populate
+tourSchema.virtual('reviews', {
+  ref: 'Review',
+  foreignField: 'tour',
+  localField: '_id',
+});
+
 // runs before the .save() and .create()
 // we can have multiple pre middlewares with the same hook and they will run in the order they are defined
 tourSchema.pre('save', function () {
