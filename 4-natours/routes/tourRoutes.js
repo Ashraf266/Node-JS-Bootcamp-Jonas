@@ -1,8 +1,12 @@
 const express = require('express');
 const tourController = require('../controllers/tourController');
 const authController = require('../controllers/authController');
+// const reviewController = require('../controllers/reviewController');
+const reviewRouter = require('./reviewRoutes');
 
 const router = express.Router();
+
+router.use('/:tourId/reviews', reviewRouter);
 
 router
   .route('/top-5-cheap')
@@ -22,5 +26,24 @@ router
     authController.restrictTo('admin', 'lead-guide'),
     tourController.deleteTour,
   );
+
+// POST /tours/893247/reviews
+// GET /tours/532992/reviews
+// GET /tours/532992/reviews/987329
+
+// router
+//   .route('/:tourId/reviews')
+//   .post(
+//     authController.protect,
+//     authController.restrictTo('user'),
+//     reviewController.createReview,
+//   );
+
+// router
+//   .route('/:tourId/reviews/:id')
+//   .get(
+//     authController.protect,
+//     reviewController.createReview,
+//   );
 
 module.exports = router;
