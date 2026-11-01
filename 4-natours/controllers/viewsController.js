@@ -1,7 +1,28 @@
-exports.getOverview = (req, res, next) => {
-  res.status(200).render('overview');
-};
+const Tour = require('../model/tourModel');
+const catchAsync = require('../utils/catchAsync');
 
-exports.getTour = (req, res, next) => {
-  res.status(200).render('tour');
-};
+exports.getOverview = catchAsync(async (req, res, next) => {
+  // get tour data
+  const tours = await Tour.find();
+  // build template
+  // render the template using the tour data
+  res.status(200).render('overview', {
+    title: 'All Tours',
+    tours,
+  });
+});
+
+exports.getTour = catchAsync(async (req, res, next) => {
+  // get tour data
+  const tour = await Tour.findOne({ slug: req.params.slug }).populate({
+    path: 'reviews',
+    fields: 'review rating user',
+  });
+  // build template
+
+  //render template using the data
+  res.status(200).render('tour', {
+    title: 'Tour',
+    tour,
+  });
+});
