@@ -22,7 +22,13 @@ exports.getTour = catchAsync(async (req, res, next) => {
 
   //render template using the data
   res.status(200).render('tour', {
-    title: 'Tour',
+    title: `${tour.name} Tour`,
     tour,
   });
 });
+
+exports.getLoginForm = (req, res) => {
+  res.status(200).render('login', {
+    title: 'Log into your account',
+  });
+};

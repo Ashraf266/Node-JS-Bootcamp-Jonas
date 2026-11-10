@@ -6,6 +6,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('@exortek/express-mongo-sanitize');
 const { xss } = require('express-xss-sanitizer');
 const hpp = require('hpp');
+const cookieParser = require('cookie-parser');
 
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
@@ -27,8 +28,47 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Global Middleware
 
-// Set Secuirty HTTP headers
-app.use(helmet());
+// Set security HTTP headers
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        scriptSrc: [
+          "'self'",
+          'https://api.mapbox.com',
+          'https://cdnjs.cloudflare.com',
+        ],
+        styleSrc: [
+          "'self'",
+          'https://api.mapbox.com',
+          'https://fonts.googleapis.com',
+          "'unsafe-inline'",
+        ],
+        workerSrc: ["'self'", 'blob:'],
+        childSrc: ["'self'", 'blob:'],
+        connectSrc: [
+          "'self'",
+          'https://api.mapbox.com',
+          'https://*.tiles.mapbox.com',
+          'https://events.mapbox.com',
+          'https://cdnjs.cloudflare.com',
+        ],
+        imgSrc: [
+          "'self'",
+          'data:',
+          'blob:',
+          'https://api.mapbox.com',
+          'https://*.tiles.mapbox.com',
+        ],
+        fontSrc: [
+          "'self'",
+          'https://api.mapbox.com',
+          'https://fonts.gstatic.com',
+        ],
+      },
+    },
+  }),
+);
 
 // Development Logging
 if (process.env.NODE_ENV === 'development') {
@@ -49,6 +89,8 @@ app.use(
     limit: '10kb',
   }),
 );
+
+app.use(cookieParser());
 
 // Data sanitization against nosql query injection
 app.use(mongoSanitize());
@@ -75,6 +117,7 @@ app.use(
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
   // console.log(req.headers);
+  // console.log(req.cookies);
   next();
 });
 
