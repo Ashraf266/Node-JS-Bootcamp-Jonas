@@ -58,6 +58,14 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+exports.logout = (req, res) => {
+  res.cookie('jwt', 'loggedout', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+  res.status(200).json({ status: 'success' });
+};
+
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check if it's there
   let token;
@@ -99,6 +107,28 @@ exports.protect = catchAsync(async (req, res, next) => {
   req.user = user;
   next();
 });
+
+// Only for rendered pages, no errors!
+exports.isLoggedIn = async (req, res, next) => {
+  if (req.cookies.jwt) {
+    try {
+      const decoded = await promisify(jwt.verify)(
+        req.cookies.jwt,
+        process.env.JWT_SECRET,
+      );
+
+      const user = await User.findById(decoded.id);
+      if (!user || user.passwordChangedAfter(decoded.iat)) return next();
+
+      res.locals.user = user;
+      return next();
+    } catch (err) {
+      return next();
+    }
+  } else {
+    next();
+  }
+};
 
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {

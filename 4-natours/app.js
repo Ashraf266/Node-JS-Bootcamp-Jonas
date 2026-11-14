@@ -29,46 +29,46 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Global Middleware
 
 // Set security HTTP headers
-app.use(
-  helmet({
-    contentSecurityPolicy: {
-      directives: {
-        scriptSrc: [
-          "'self'",
-          'https://api.mapbox.com',
-          'https://cdnjs.cloudflare.com',
-        ],
-        styleSrc: [
-          "'self'",
-          'https://api.mapbox.com',
-          'https://fonts.googleapis.com',
-          "'unsafe-inline'",
-        ],
-        workerSrc: ["'self'", 'blob:'],
-        childSrc: ["'self'", 'blob:'],
-        connectSrc: [
-          "'self'",
-          'https://api.mapbox.com',
-          'https://*.tiles.mapbox.com',
-          'https://events.mapbox.com',
-          'https://cdnjs.cloudflare.com',
-        ],
-        imgSrc: [
-          "'self'",
-          'data:',
-          'blob:',
-          'https://api.mapbox.com',
-          'https://*.tiles.mapbox.com',
-        ],
-        fontSrc: [
-          "'self'",
-          'https://api.mapbox.com',
-          'https://fonts.gstatic.com',
-        ],
-      },
-    },
-  }),
-);
+// app.use(
+//   helmet({
+//     contentSecurityPolicy: {
+//       directives: {
+//         scriptSrc: [
+//           "'self'",
+//           'https://api.mapbox.com',
+//           'https://cdnjs.cloudflare.com',
+//         ],
+//         styleSrc: [
+//           "'self'",
+//           'https://api.mapbox.com',
+//           'https://fonts.googleapis.com',
+//           "'unsafe-inline'",
+//         ],
+//         workerSrc: ["'self'", 'blob:'],
+//         childSrc: ["'self'", 'blob:'],
+//         connectSrc: [
+//           "'self'",
+//           'https://api.mapbox.com',
+//           'https://*.tiles.mapbox.com',
+//           'https://events.mapbox.com',
+//           'https://cdnjs.cloudflare.com',
+//         ],
+//         imgSrc: [
+//           "'self'",
+//           'data:',
+//           'blob:',
+//           'https://api.mapbox.com',
+//           'https://*.tiles.mapbox.com',
+//         ],
+//         fontSrc: [
+//           "'self'",
+//           'https://api.mapbox.com',
+//           'https://fonts.gstatic.com',
+//         ],
+//       },
+//     },
+//   }),
+// );
 
 // Development Logging
 if (process.env.NODE_ENV === 'development') {
