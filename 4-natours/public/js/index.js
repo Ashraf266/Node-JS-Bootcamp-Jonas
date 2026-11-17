@@ -17,7 +17,7 @@ const mapElement = document.getElementById('map');
 
 if (mapElement) {
   const locations = JSON.parse(mapElement.dataset.locations);
-  displayMap(locations);
+  displayMap(locations, mapElement.dataset.mapboxToken);
 }
 
 const logoutButton = document.querySelector('.nav__el--logout');

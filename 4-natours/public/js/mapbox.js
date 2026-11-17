@@ -1,7 +1,6 @@
-export const displayMap = (locations) => {
+export const displayMap = (locations, accessToken) => {
   const map = new mapboxgl.Map({
-    accessToken:
-      '<key>',
+    accessToken,
     container: 'map',
     style: 'mapbox://styles/mohamedashrafece/cmway32li007601qt50id5963',
     scrollZoom: false,

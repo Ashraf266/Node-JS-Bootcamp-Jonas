@@ -6,31 +6,52 @@ const DB_ERROR_TYPES = Object.freeze({
   DUPLICATE_KEY_CODE: 11000,
 });
 
-const sendErrorDev = (err, res) => {
-  res.status(err.statusCode).json({
-    status: err.status,
-    error: err,
-    message: err.message,
-    stack: err.stack,
-  });
-};
-
-const sendErrorProd = (err, res) => {
-  // operational, trusted error: send message to client
-  if (err.isOperational) {
+const sendErrorDev = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
     res.status(err.statusCode).json({
       status: err.status,
+      error: err,
       message: err.message,
+      stack: err.stack,
+    });
+  } else {
+    res.status(err.statusCode).render('error', {
+      title: 'Something went wrong!',
+      msg: err.message,
     });
   }
-  // Programming or other unknown error
-  else {
-    console.log('ERROR ', err);
+};
 
-    res.status(500).json({
-      status: 'error',
-      message: 'Something went wrong!',
-    });
+const sendErrorProd = (err, req, res) => {
+  if (req.originalUrl.startsWith('/api')) {
+    // operational, trusted error: send message to client
+    if (err.isOperational) {
+      res.status(err.statusCode).json({
+        status: err.status,
+        message: err.message,
+      });
+    }
+    // Programming or other unknown error
+    else {
+      console.log('ERROR ', err);
+
+      res.status(500).json({
+        status: 'error',
+        message: 'Something went wrong!',
+      });
+    }
+  } else {
+    if (err.isOperational) {
+      res.status(err.statusCode).render('error', {
+        title: 'Something went wrong!',
+        msg: err.message,
+      });
+    } else {
+      res.status(err.statusCode).render('error', {
+        title: 'Something went wrong!',
+        msg: 'Please try again later.',
+      });
+    }
   }
 };
 
@@ -57,7 +78,7 @@ module.exports = (err, req, res, next) => {
   err.status = err.status ?? 'error';
 
   if (process.env.NODE_ENV === 'development') {
-    sendErrorDev(err, res);
+    sendErrorDev(err, req, res);
   } else if (process.env.NODE_ENV === 'production') {
     if (err.name === DB_ERROR_TYPES.CAST_ERROR) {
       err = handleCastErrorDB(err);
@@ -74,6 +95,6 @@ module.exports = (err, req, res, next) => {
     if (err.name === 'TokenExpiredError') {
       err = new AppError('Your token has expired! Please log in again.', 401);
     }
-    sendErrorProd(err, res);
+    sendErrorProd(err, req, res);
   }
 };
